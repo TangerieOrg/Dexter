@@ -14,7 +14,7 @@
     "license": "ISC",
     "dependencies": {
         "@tangerie/authenticator-api": "^0.0.3",
-        "@tangerie/dexcom.js": "^0.0.1",
+        "@tangerie/dexcom.js": "^2.0.0",
         "@types/express": "^4.17.14",
         "@types/lodash": "^4.14.185",
         "@types/node": "^18.7.18",

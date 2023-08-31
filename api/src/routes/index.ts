@@ -1,13 +1,12 @@
 import express from "express";
 import TestRoutes from "./test";
 import { Request, Response, NextFunction } from "express";
+import GlucoseRoutes from "./glucose";
 
 const router = express.Router();
 
 const routers : Record<string, express.Router> = {
-    // '/gpt': GPTRoutes,
-    // '/fake': FakeGPTRoutes,
-    // '/user': UserRoutes
+    "/glucose": GlucoseRoutes,
 };
 
 if(process.env.NODE_ENV === "development") {

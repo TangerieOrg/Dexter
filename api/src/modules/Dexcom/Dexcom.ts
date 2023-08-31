@@ -1,20 +1,30 @@
-// import { CreateDatabase } from "@modules/Database/Middleware";
+import { CreateDatabase } from "@modules/Database/Middleware";
+
+import { Dexcom } from "@tangerie/dexcom.js";
 
 const PULL_EVERY_SECONDS = 60;
 
+const dexcom = new Dexcom(process.env.DEXCOM_USERNAME as string, process.env.DEXCOM_PASSWORD as string);
+
+export const useDexcom = () => dexcom.login().then(() => dexcom);
+
 const onInterval = async () => {
+    await dexcom.login();
     console.log("Pulling Dexcom Data");
 
-    /*const client = await CreateDatabase();
+    const redis = await CreateDatabase();
 
-    // Do Database stuff
+    const readings = await dexcom.getGlucoseReadings(10, 1);
+    console.log(readings[0].toString());
 
-    await client.quit();*/
+    await redis.quit();
 }
 
 const init = async () => {
+    if(loop) clearInterval(loop);
     // console.log("Dexcom Init");
     await onInterval();
 }
 
-export const StartDexcomLoop = () => init().then(() => setInterval(onInterval, PULL_EVERY_SECONDS * 1000));
+let loop : NodeJS.Timer | null = null;
+export const StartDexcomLoop = process.env.NODE_ENV === "development" ? () => init().then(() => loop = setInterval(onInterval, PULL_EVERY_SECONDS * 1000)) : () => { console.log("DEXCOM DISABLED IN PRODOCTION") }
