@@ -10,6 +10,7 @@ import cors from "cors";
 import router from "./routes";
 import cookieMiddleware from "cookie-parser";
 import { DatabaseMiddleware } from "@modules/Database/Middleware";
+import { StartDexcomLoop } from '@modules/Dexcom';
 
 const app = express();
 
@@ -49,4 +50,5 @@ const port = process.env.EXPRESS_PORT ?? 80;
 
 app.listen(port, () => {
     console.log("Listening on port", port);
+    StartDexcomLoop();
 });
