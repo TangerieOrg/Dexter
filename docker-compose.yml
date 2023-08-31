@@ -1,0 +1,49 @@
+version: '3'
+services:
+  redis:
+    image: redislabs/redismod:latest
+    volumes:
+      - redis-data:/data
+      - redis-conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    deploy:
+      replicas: 1
+  api:
+    image: ${IMAGE_NAME}/api:latest
+    deploy:
+      replicas: 1
+      labels:
+        xyz.tangerie.reverse_proxy.path: "/dexter/api"
+        xyz.tangerie.reverse_proxy.port: "80"
+    networks:
+      - default
+      - authenticator-overlay
+      - nginx-proxy-overlay
+    depends_on:
+      - redis
+  frontend:
+    image: ${IMAGE_NAME}/frontend:latest
+    deploy:
+      replicas: 1
+      labels:
+        xyz.tangerie.reverse_proxy.path: "/dexter"
+        xyz.tangerie.reverse_proxy.port: "3000"
+    networks:
+      - default
+      - nginx-proxy-overlay
+    depends_on:
+      - api
+
+volumes:
+  redis-data:
+  redis-conf:
+
+networks:
+  default:
+  nginx-proxy-overlay:
+    external: true
+    driver: overlay
+  authenticator-overlay:
+    external: true
+    driver: overlay
