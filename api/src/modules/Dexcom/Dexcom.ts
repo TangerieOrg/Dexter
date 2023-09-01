@@ -8,11 +8,18 @@ const dexcom = new Dexcom(process.env.DEXCOM_USERNAME as string, process.env.DEX
 
 export const useDexcom = () => dexcom.login().then(() => dexcom);
 
+
 const onInterval = async () => {
     await dexcom.login();
     console.log("Pulling Dexcom Data");
 
     const redis = await useRedis();
+
+    if(!await redis.exists("glucose:readings")) {
+        await redis.json.set("glucose:readings", ".", (await dexcom.getGlucoseReadings()).reverse().map(x => x.toObject()));
+        return;
+    }
+
     const previous = await getLatestGlucose();
 
     
@@ -25,12 +32,7 @@ const onInterval = async () => {
 
 const init = async () => {
     if(loop) clearInterval(loop);
-    
-    const redis = await useRedis();
 
-    if(!await redis.exists("glucose:readings")) {
-        await redis.json.set("glucose:readings", ".", []);
-    }
     // console.log("Dexcom Init");
     await onInterval();
 }
