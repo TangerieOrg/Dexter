@@ -2,7 +2,7 @@ import { useRedis } from "@modules/Database/useRedis";
 
 import { Dexcom, GlucoseReading } from "@tangerie/dexcom.js";
 
-const PULL_EVERY_SECONDS = 5;
+const PULL_EVERY_SECONDS = 60;
 
 const dexcom = new Dexcom(process.env.DEXCOM_USERNAME as string, process.env.DEXCOM_PASSWORD as string);
 
