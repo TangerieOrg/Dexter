@@ -27,4 +27,4 @@ const init = async () => {
 }
 
 let loop : NodeJS.Timer | null = null;
-export const StartDexcomLoop = process.env.NODE_ENV === "development" ? () => init().then(() => loop = setInterval(onInterval, PULL_EVERY_SECONDS * 1000)) : () => { console.log("DEXCOM DISABLED IN PRODOCTION") }
+export const StartDexcomLoop = () => init().then(() => loop = setInterval(onInterval, PULL_EVERY_SECONDS * 1000))

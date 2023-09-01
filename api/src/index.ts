@@ -1,9 +1,6 @@
-import dotenv from 'dotenv';
-import path from "path";
+import { LoadEnv } from "@modules/Env";
 
-dotenv.config({
-    path: path.join(process.cwd(), process.env.NODE_ENV === 'development' ? ".env.development" : ".env")
-});
+LoadEnv();
 
 import express from "express";
 import cors from "cors";
@@ -12,6 +9,7 @@ import cookieMiddleware from "cookie-parser";
 import { DatabaseMiddleware } from "@modules/Database/Middleware";
 import { StartDexcomLoop } from '@modules/Dexcom';
 import { AuthenticatorMiddleware } from '@modules/Auth';
+
 
 const app = express();
 

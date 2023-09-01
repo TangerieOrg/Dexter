@@ -22,6 +22,11 @@ services:
       - nginx-proxy-overlay
     depends_on:
       - redis
+    environment:
+      - DEXCOM_ENV_FILE=/run/secrets/DexcomAuth
+    secrets:
+      - DexcomAuth
+
   frontend:
     image: ${IMAGE_NAME}/frontend:latest
     deploy:
@@ -47,3 +52,7 @@ networks:
   authenticator-overlay:
     external: true
     driver: overlay
+
+secrets:
+  DexcomAuth:
+    external: true
