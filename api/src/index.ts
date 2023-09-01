@@ -6,7 +6,6 @@ import express from "express";
 import cors from "cors";
 import router from "./routes";
 import cookieMiddleware from "cookie-parser";
-import { DatabaseMiddleware } from "@modules/Database/Middleware";
 import { StartDexcomLoop } from '@modules/Dexcom';
 import { AuthenticatorMiddleware } from '@modules/Auth';
 
@@ -27,7 +26,6 @@ app.use(express.urlencoded({
 }));
 
 app.use(cookieMiddleware(process.env.COOKIE_SECRET || "cookie_secret"));
-app.use(DatabaseMiddleware);
 app.use(AuthenticatorMiddleware);
 
 // Disable cache
