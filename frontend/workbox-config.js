@@ -10,5 +10,7 @@ module.exports = {
         '': '/dexter/'
     },
     cacheId: "Dexter",
-    navigateFallback: "/dexter/"
+    navigateFallback: "/dexter/",
+    mode: "debug",
+    disableDevLogs: false
 };
