@@ -4,7 +4,9 @@ const sw = `${BASE_URL}service-worker.js`; // it is needed because parcel will n
 export const LoadPWA = () => {
     console.log("Loading PWA Service Worker from", sw);
     navigator.serviceWorker
-        .register(sw)
+        .register(sw, {
+            scope: BASE_URL
+        })
         .then(registration => {
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
@@ -17,7 +19,7 @@ export const LoadPWA = () => {
                             console.log(
                                 "New content is available, page will be reloaded"
                             );
-                            window.location.reload();
+                            // window.location.reload();
                         } else {
                             console.log("Content is cached for offline use.");
                         }
