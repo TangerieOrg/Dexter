@@ -19,13 +19,13 @@ export function toQueryString(data : Record<string, any>) {
     return params.toString();
 }
 
-export const BASE_URL = process.env.APP_BASE_URL ?? (process.env.NODE_ENV === "development" ? "/" : "/dexter");
+export const BASE_URL = process.env.APP_BASE_URL ?? (process.env.NODE_ENV === "development" ? "/" : "/dexter/");
 
 export const getLocationParts = (pathname ?: string) => {
     if(pathname === undefined) pathname = window.location.pathname.slice(BASE_URL.length);
     if(pathname.at(0) === '/') pathname = pathname.slice(1)  // Remove leading '/'
     if(pathname.length === 0) return [];
-    return pathname.split("/");
+    return pathname.split("/").filter(x => x.length > 0);
 }
 
 export const getObjectFromURL = (search = window.location.search) : Record<string, string> => {

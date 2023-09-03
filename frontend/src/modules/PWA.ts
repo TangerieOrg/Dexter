@@ -1,6 +1,8 @@
-const sw = "service-worker.js"; // it is needed because parcel will not recognize this as a file and not precess in its manner
+import { BASE_URL } from "./Util/Query";
+
+const sw = `${BASE_URL}service-worker.js`; // it is needed because parcel will not recognize this as a file and not precess in its manner
 export const LoadPWA = () => {
-    console.log("Loading PWA Service Worker")
+    console.log("Loading PWA Service Worker from", sw);
     navigator.serviceWorker
         .register(sw)
         .then(registration => {

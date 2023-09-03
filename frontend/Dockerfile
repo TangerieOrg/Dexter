@@ -20,12 +20,8 @@ COPY . .
 
 RUN npm run build
 
-FROM node:18.3.0
+FROM docker.tangerie.xyz/nginx-spa
 
 WORKDIR /app
 
 COPY --from=build /app/dist /app
-
-EXPOSE 3000
-
-ENTRYPOINT ["npx", "serve", "-s", "."]

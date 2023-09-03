@@ -1,6 +1,6 @@
 import { BASE_URL } from "@modules/Util/Query";
 import { merge } from "lodash";
-const API_ROOT: string = `${BASE_URL}${BASE_URL.endsWith("/") ? "" : "/"}api`;
+const API_ROOT: string = `${BASE_URL}api`;
 
 export const getAPIUrl = (url: string) => `${API_ROOT}${url.startsWith("/") ? "" : "/"}${url}`;
 
