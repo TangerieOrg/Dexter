@@ -33,7 +33,7 @@ services:
       replicas: 1
       labels:
         xyz.tangerie.reverse_proxy.path: "/dexter"
-        xyz.tangerie.reverse_proxy.port: "3000"
+        xyz.tangerie.reverse_proxy.port: "80"
     networks:
       - default
       - nginx-proxy-overlay
