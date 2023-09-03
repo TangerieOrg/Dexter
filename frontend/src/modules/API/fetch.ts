@@ -11,9 +11,8 @@ export const RawFetchAPI = (path : string, init? : RequestInit) => fetch(getAPIU
     credentials: 'include'
 }, init ?? {}));
 
-export const FetchAPI = (...args : Parameters<typeof RawFetchAPI>) => RawFetchAPI(...args).catch(err => {
-    console.error("[API ERROR]", ...args, err);
-    throw new Error(err);
+export const FetchAPI = (...args : Parameters<typeof RawFetchAPI>) => RawFetchAPI(...args);
+export const FetchAPIJSON = <R,>(...args : Parameters<typeof FetchAPI>) => FetchAPI(...args).then(r => {
+    if(r.ok) return r.json() as Promise<R>;
+    return r.json().then(({error} : {error : string}) => { throw new Error(error) })
 });
-
-export const FetchAPIJSON = <R,>(...args : Parameters<typeof FetchAPI>) => FetchAPI(...args).then(r => r.json() as R);

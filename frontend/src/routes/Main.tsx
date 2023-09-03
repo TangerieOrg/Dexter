@@ -17,7 +17,11 @@ export default function MainRoute() {
     });
 
     useEffect(() => {
-        const update = () => FetchAPIJSON<Reading>("/glucose/current").then(setCurrent);
+        const update = () => FetchAPIJSON<Reading>("/glucose/current").then(setCurrent).catch((err : Error) => {
+            if(err.message === "Not Logged In") {
+                window.location.href = "https://tangerie.xyz/oauth/login?redirect=/dexter";
+            }
+        });
         let interval = setInterval(update, 1000 * 60);
         update();
         return () => clearInterval(interval);
