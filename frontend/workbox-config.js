@@ -13,7 +13,7 @@ module.exports = {
     cacheId: "Dexter",
     navigateFallback: "/dexter/",
     ignoreURLParametersMatching: [
-        /^\/dexter\/api\//
+        /^api$/
     ],
     mode: "debug"
 };
