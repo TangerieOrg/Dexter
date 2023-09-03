@@ -24,6 +24,7 @@ const onInterval = async () => {
 
     
     const readings = await dexcom.getGlucoseReadings(10, 1);
+    if(readings.length === 0) return;
     if(!previous || previous.date != readings[0].toObject().date) {
         console.log("New Reading: ", readings[0].toString());
         await redis.json.arrAppend("glucose:readings", ".", readings[0].toObject());
