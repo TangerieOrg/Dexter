@@ -14,5 +14,6 @@ module.exports = {
     navigateFallback: "/dexter/",
     ignoreURLParametersMatching: [
         /^\/dexter\/api\//
-    ]
+    ],
+    mode: "debug"
 };
