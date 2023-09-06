@@ -49,3 +49,21 @@ export const getLatestGlucose = async () => {
     if(length === 0) return undefined;
     return (await redis.json.get("glucose:readings", { path: `$[${length - 1}]`}) as ReturnType<GlucoseReading["toObject"]>[])[0];
 }
+
+const minmax = (n : number, min : number, max : number) => 
+    Math.min(
+        Math.max(
+            n,
+            min
+        ),
+        max
+    )
+
+export const getLastGlucose = async (number : number) => {
+    const redis = await useRedis();
+
+    const length = (await redis.json.arrLen("glucose:readings")) as number;
+    if(length === 0) return [];
+    const start = minmax(length - number, 0, length);
+    return (await redis.json.get("glucose:readings", { path: `$[${start}:${length}]`}) as ReturnType<GlucoseReading["toObject"]>[]);
+}
