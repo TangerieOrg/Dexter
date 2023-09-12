@@ -101,5 +101,8 @@
     "include": [
         "src/**/*",
         "@types/**/*"
-    ]
+    ],
+    "ts-node": {
+        "transpileOnly": true
+    }
 }
