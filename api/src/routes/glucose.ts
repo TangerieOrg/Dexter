@@ -16,4 +16,9 @@ GlucoseRoutes.get("/ten", asyncHandler(async (req, res) => {
     res.json(await getLastGlucose(10));
 }));
 
+GlucoseRoutes.get("/query", asyncHandler(async (req, res) => {
+    const length = Math.max(1, parseInt(req.query.length ?? "0"));
+    res.json(await getLastGlucose(length));
+}));
+
 export default GlucoseRoutes;
