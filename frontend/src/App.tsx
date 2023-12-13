@@ -5,7 +5,7 @@ function App() {
     useURLStoreUpdater();
 
     return (
-        <div class="min-h-screen w-screen dark:bg-zinc-950 dark:text-gray-100">
+        <div class="min-h-screen w-screen dark:text-gray-100">
             <Router/>
         </div>
     )
