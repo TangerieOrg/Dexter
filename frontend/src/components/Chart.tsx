@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import uPlot from "uplot";
-import { Series } from "@modules/api";
-import { formatClock, HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "@modules/glucose";
+import { Series } from "@/modules/api";
+import { formatClock, HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "@/modules/glucose";
 
 // Readings are every 5 minutes, anything longer than this is a gap in the line
 const GAP_MS = 15 * 60 * 1000;

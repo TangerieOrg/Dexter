@@ -1,4 +1,4 @@
-import { GlucoseTrend, Reading } from "@modules/api";
+import { GlucoseTrend, Reading } from "@/modules/api";
 
 export const LOW = 3.9;
 export const HIGH = 10;
