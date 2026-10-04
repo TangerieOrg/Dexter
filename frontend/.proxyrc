@@ -1,9 +1,0 @@
-{
-  "/api": {
-    "target": "http://tangerie.xyz/dexter/api/",
-    "pathRewrite": {
-      "^/api": ""
-    },
-    "changeOrigin": true
-  }
-}

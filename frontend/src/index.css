@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@import "uplot/dist/uPlot.min.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html, body {
+    @apply bg-zinc-950 text-zinc-100;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.safe-area {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
