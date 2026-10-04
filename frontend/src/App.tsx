@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import Chart from "./Chart";
 import { Reading } from "./api";
-import { predict, Prediction, RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
+import { formatClock, predict, Prediction, RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
 import { GlucoseStore, selectError, selectHours, selectLatest, selectLoading, selectPrevious, selectSeries, startRefreshing, useGlucoseStore } from "./stores/GlucoseStore";
 
 const STALE_MS = 10 * 60 * 1000;
@@ -29,8 +29,6 @@ const formatAgo = (ms : number) => {
     if(hrs < 48) return `${hrs} hr ago`;
     return `${Math.floor(hrs / 24)} days ago`;
 }
-
-const formatClock = (ms : number) => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 function PredictionText({ p } : { p: Prediction }) {
     const value = (v : number) => <span style={{ color: rangeColor(v) }}>{v.toFixed(1)}</span>;

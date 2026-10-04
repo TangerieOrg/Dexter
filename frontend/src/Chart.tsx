@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import uPlot from "uplot";
 import { Series } from "./api";
-import { HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "./glucose";
+import { formatClock, HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "./glucose";
 
 // Readings are every 5 minutes, anything longer than this is a gap in the line
 const GAP_MS = 15 * 60 * 1000;
@@ -33,7 +33,6 @@ const withGaps = (s : Series) : uPlot.AlignedData => {
     return [t, v];
 }
 
-const formatTime = (ms : number) => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 function drawPrediction(u : uPlot, p : Prediction) {
     const ctx = u.ctx;
@@ -130,7 +129,7 @@ export default function Chart({ series, hours, prediction } : Props) {
             return;
         }
         el.style.opacity = "1";
-        el.textContent = `${value.toFixed(1)} · ${formatTime(u.data[0][idx])}`;
+        el.textContent = `${value.toFixed(1)} · ${formatClock(u.data[0][idx])}`;
         el.style.color = rangeColor(value);
     }
 
@@ -172,7 +171,7 @@ export default function Chart({ series, hours, prediction } : Props) {
                     size: 32,
                     values: (_u, splits) => splits.map(x => {
                         const d = new Date(x);
-                        return d.toLocaleTimeString([], d.getMinutes() === 0 ? { hour: "numeric" } : { hour: "numeric", minute: "2-digit" });
+                        return formatClock(x, d.getMinutes() !== 0);
                     })
                 },
                 { ...AXIS, size: 36, splits: (u) => [3.9, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26].filter(x => x <= u.scales.y.max! && x >= u.scales.y.min!) }

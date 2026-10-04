@@ -60,3 +60,9 @@ export type Prediction = NonNullable<ReturnType<typeof predict>>;
 
 export const RANGES = [3, 6, 12, 24] as const;
 export const rangeLabel = (h : number) => `${h}h`;
+
+// Some locales default to a 0-23 or 0-11 clock, always show 12:06 rather than 0:06
+export const formatClock = (ms : number, withMinutes = true) => new Date(ms).toLocaleTimeString([], withMinutes ?
+    { hour: "numeric", minute: "2-digit", hourCycle: "h12" } :
+    { hour: "numeric", hourCycle: "h12" }
+);
