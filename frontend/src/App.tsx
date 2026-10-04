@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import Chart from "./Chart";
 import { Reading } from "./api";
-import { RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
+import { predict, Prediction, RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
 import { GlucoseStore, selectError, selectHours, selectLatest, selectLoading, selectPrevious, selectSeries, startRefreshing, useGlucoseStore } from "./stores/GlucoseStore";
 
 const STALE_MS = 10 * 60 * 1000;
@@ -30,9 +30,24 @@ const formatAgo = (ms : number) => {
     return `${Math.floor(hrs / 24)} days ago`;
 }
 
+const formatClock = (ms : number) => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+function PredictionText({ p } : { p: Prediction }) {
+    const value = (v : number) => <span style={{ color: rangeColor(v) }}>{v.toFixed(1)}</span>;
+    return <span class="ml-2 whitespace-nowrap text-lg tabular-nums text-zinc-400">
+        {
+            p.openHigh ? <>&gt; {value(p.lo)}</> :
+            p.openLow ? <>&lt; {value(p.hi)}</> :
+            <>{value(p.lo)}–{value(p.hi)}</>
+        }
+        <span class="ml-1 text-xs">by {formatClock(p.t1)}</span>
+    </span>
+}
+
 function Current({ latest, previous, now } : { latest: Reading, previous?: Reading, now: number }) {
     const stale = now - latest.date > STALE_MS;
     const info = TREND_INFO[latest.trend];
+    const prediction = predict(latest);
     const hasDelta = previous && latest.date - previous.date <= DELTA_MAX_MS;
     const delta = hasDelta ? latest.value - previous.value : 0;
 
@@ -52,7 +67,7 @@ function Current({ latest, previous, now } : { latest: Reading, previous?: Readi
         <span class="mt-4 text-2xl font-light">
             {info?.label ?? latest.trend}
             {
-                info?.rate && <span class="ml-2 text-base text-zinc-400">{info.rate} <span class="text-xs">/ 30 min</span></span>
+                prediction && <PredictionText p={prediction}/>
             }
         </span>
         <span class={`mt-3 text-sm ${stale ? "font-medium text-amber-400" : "text-zinc-500"}`}>
@@ -96,7 +111,7 @@ export default function App() {
                 }
             </div>
             <div class="relative min-h-56 flex-1">
-                <Chart series={series} hours={hours}/>
+                <Chart series={series} hours={hours} prediction={latest && predict(latest)}/>
             </div>
         </section>
     </main>

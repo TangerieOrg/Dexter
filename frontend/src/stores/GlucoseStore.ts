@@ -21,9 +21,9 @@ interface State {
 const loadHours = () => {
     try {
         const h = parseInt(localStorage.getItem(RANGE_KEY) ?? "");
-        return (RANGES as readonly number[]).includes(h) ? h : 6;
+        return (RANGES as readonly number[]).includes(h) ? h : 3;
     } catch {
-        return 6;
+        return 3;
     }
 }
 

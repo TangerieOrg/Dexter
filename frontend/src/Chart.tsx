@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import uPlot from "uplot";
 import { Series } from "./api";
-import { HIGH, LOW, rangeColor, RANGE_COLORS } from "./glucose";
+import { HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "./glucose";
 
 // Readings are every 5 minutes, anything longer than this is a gap in the line
 const GAP_MS = 15 * 60 * 1000;
@@ -16,6 +16,7 @@ const AXIS = {
 interface Props {
     series: Series;
     hours: number;
+    prediction?: Prediction;
 }
 
 const withGaps = (s : Series) : uPlot.AlignedData => {
@@ -32,10 +33,61 @@ const withGaps = (s : Series) : uPlot.AlignedData => {
     return [t, v];
 }
 
-const formatTime = (ms : number, hours : number) => new Date(ms).toLocaleString([], hours > 24 ?
-    { weekday: "short", hour: "numeric", minute: "2-digit" } :
-    { hour: "numeric", minute: "2-digit" }
-);
+const formatTime = (ms : number) => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+function drawPrediction(u : uPlot, p : Prediction) {
+    const ctx = u.ctx;
+    const x = (t : number) => u.valToPos(t, "x", true);
+    const y = (v : number) => u.valToPos(v, "y", true);
+    const color = rangeColor((p.coneLo + p.coneHi) / 2);
+    const dpr = devicePixelRatio;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+    ctx.clip();
+
+    ctx.beginPath();
+    ctx.moveTo(x(p.t0), y(p.v0));
+    ctx.lineTo(x(p.tCone), y(p.coneHi));
+    ctx.lineTo(x(p.tCone), y(p.coneLo));
+    ctx.closePath();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.globalAlpha = 0.8;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.setLineDash([4 * dpr, 4 * dpr]);
+    ctx.beginPath();
+    ctx.moveTo(x(p.t0), y(p.v0));
+    ctx.lineTo(x(p.tCone), y(p.coneHi));
+    ctx.moveTo(x(p.t0), y(p.v0));
+    ctx.lineTo(x(p.tCone), y(p.coneLo));
+    ctx.stroke();
+
+    // Where the 15 minute prediction in the text applies
+    ctx.globalAlpha = 0.5;
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(x(p.t1), y(p.hi) - 4 * dpr);
+    ctx.lineTo(x(p.t1), y(p.lo) + 4 * dpr);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `${11 * dpr}px Roboto, system-ui, sans-serif`;
+    ctx.textAlign = "right";
+    ctx.fillStyle = color;
+    const right = Math.min(x(p.tCone), u.bbox.left + u.bbox.width) - 2 * dpr;
+    ctx.textBaseline = "bottom";
+    ctx.fillText(p.coneHi.toFixed(1), right, y(p.coneHi) - 3 * dpr);
+    ctx.textBaseline = "top";
+    ctx.fillText(p.coneLo.toFixed(1), right, y(p.coneLo) + 3 * dpr);
+    ctx.restore();
+}
 
 // Hard colour stops at the low/high thresholds so the line changes colour as it crosses them
 function rangeGradient(u : uPlot) {
@@ -57,14 +109,16 @@ function rangeGradient(u : uPlot) {
     return g;
 }
 
-export default function Chart({ series, hours } : Props) {
+export default function Chart({ series, hours, prediction } : Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const readoutRef = useRef<HTMLDivElement>(null);
     const plotRef = useRef<uPlot>();
     const hoursRef = useRef(hours);
     const seriesRef = useRef(series);
+    const predictionRef = useRef(prediction);
     hoursRef.current = hours;
     seriesRef.current = series;
+    predictionRef.current = prediction;
 
     const showReadout = (u : uPlot) => {
         const el = readoutRef.current;
@@ -76,7 +130,7 @@ export default function Chart({ series, hours } : Props) {
             return;
         }
         el.style.opacity = "1";
-        el.textContent = `${value.toFixed(1)} · ${formatTime(u.data[0][idx], hoursRef.current)}`;
+        el.textContent = `${value.toFixed(1)} · ${formatTime(u.data[0][idx])}`;
         el.style.color = rangeColor(value);
     }
 
@@ -99,11 +153,17 @@ export default function Chart({ series, hours } : Props) {
                     time: true,
                     range: () => {
                         const now = Date.now();
-                        return [now - hoursRef.current * 60 * 60 * 1000, now];
+                        const end = Math.max(now, predictionRef.current?.tCone ?? now);
+                        return [now - hoursRef.current * 60 * 60 * 1000, end];
                     }
                 },
                 y: {
-                    range: (_u, min, max) => [Math.min(2, min ?? 2), Math.max(14, Math.ceil((max ?? 0) + 1))]
+                    range: (_u, min, max) => {
+                        const p = predictionRef.current;
+                        const lo = Math.min(min ?? 2, p?.coneLo ?? Infinity);
+                        const hi = Math.max(max ?? 0, p?.coneHi ?? -Infinity);
+                        return [Math.min(2, lo), Math.max(14, Math.ceil(hi + 1))];
+                    }
                 }
             },
             axes: [
@@ -112,7 +172,6 @@ export default function Chart({ series, hours } : Props) {
                     size: 32,
                     values: (_u, splits) => splits.map(x => {
                         const d = new Date(x);
-                        if(hoursRef.current > 24 && d.getHours() === 0 && d.getMinutes() === 0) return d.toLocaleDateString([], { weekday: "short", day: "numeric" });
                         return d.toLocaleTimeString([], d.getMinutes() === 0 ? { hour: "numeric" } : { hour: "numeric", minute: "2-digit" });
                     })
                 },
@@ -137,6 +196,11 @@ export default function Chart({ series, hours } : Props) {
                         ctx.fillStyle = "rgba(52, 211, 153, 0.07)";
                         ctx.fillRect(u.bbox.left, top, u.bbox.width, bottom - top);
                         ctx.restore();
+                    }
+                ],
+                draw: [
+                    u => {
+                        if(predictionRef.current) drawPrediction(u, predictionRef.current);
                     }
                 ],
                 setCursor: [showReadout]
@@ -171,9 +235,10 @@ export default function Chart({ series, hours } : Props) {
         }
     }, []);
 
+    // setData rescales, which picks up the prediction's x/y extent too
     useEffect(() => {
         plotRef.current?.setData(withGaps(series));
-    }, [series, hours]);
+    }, [series, hours, prediction?.t0, prediction?.lo, prediction?.hi]);
 
     return <div class="absolute inset-0">
         <div ref={readoutRef} class="pointer-events-none absolute right-2 top-1 z-10 rounded bg-zinc-900/80 px-2 py-0.5 text-sm tabular-nums opacity-0 transition-opacity"/>

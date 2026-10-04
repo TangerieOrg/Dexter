@@ -1,4 +1,4 @@
-import { GlucoseTrend } from "./api";
+import { GlucoseTrend, Reading } from "./api";
 
 export const LOW = 3.9;
 export const HIGH = 10;
@@ -11,18 +11,52 @@ export const RANGE_COLORS = {
 
 export const rangeColor = (v : number) => v < LOW ? RANGE_COLORS.low : v > HIGH ? RANGE_COLORS.high : RANGE_COLORS.in;
 
-// Dexcom's arrow thresholds are 1/2/3 mg/dL per minute, shown here as mmol/L per 30 minutes
-export const TREND_INFO : Partial<Record<GlucoseTrend, { label: string, rate: string }>> = {
-    DoubleUp: { label: "Rising quickly", rate: "> +5" },
-    SingleUp: { label: "Rising", rate: "+3.3 to +5" },
-    FortyFiveUp: { label: "Rising slowly", rate: "+1.7 to +3.3" },
-    Flat: { label: "Steady", rate: "± 1.7" },
-    FortyFiveDown: { label: "Falling slowly", rate: "-1.7 to -3.3" },
-    SingleDown: { label: "Falling", rate: "-3.3 to -5" },
-    DoubleDown: { label: "Falling quickly", rate: "< -5" },
-    NotComputable: { label: "No trend", rate: "" },
-    RateOutOfRange: { label: "Rate out of range", rate: "" }
+export const PREDICT_MS = 15 * 60_000;
+export const CONE_MS = 30 * 60_000;
+const SENSOR_MIN = 2.2;
+const SENSOR_MAX = 22.2;
+const MG_TO_MMOL = 0.0555;
+// Double arrows are open ended, draw the cone out to 4 mg/dL per minute
+const OPEN_MG = 60;
+
+// From dexcom.com trend arrow chart, change in mg/dL over 15 minutes (null = open ended)
+export const TREND_INFO : Partial<Record<GlucoseTrend, { label: string, bounds?: [number | null, number | null] }>> = {
+    DoubleUp: { label: "Rising quickly", bounds: [45, null] },
+    SingleUp: { label: "Rising", bounds: [30, 45] },
+    FortyFiveUp: { label: "Rising slowly", bounds: [15, 30] },
+    Flat: { label: "Steady", bounds: [-15, 15] },
+    FortyFiveDown: { label: "Falling slowly", bounds: [-30, -15] },
+    SingleDown: { label: "Falling", bounds: [-45, -30] },
+    DoubleDown: { label: "Falling quickly", bounds: [null, -45] },
+    NotComputable: { label: "No trend" },
+    RateOutOfRange: { label: "Rate out of range" }
 };
 
-export const RANGES = [3, 6, 12, 24, 168] as const;
-export const rangeLabel = (h : number) => h > 24 && h % 24 === 0 ? `${h / 24}d` : `${h}h`;
+const clampSensor = (v : number) => Math.min(SENSOR_MAX, Math.max(SENSOR_MIN, v));
+
+export function predict(latest : Pick<Reading, "value" | "trend" | "date">) {
+    const bounds = TREND_INFO[latest.trend]?.bounds;
+    if(!bounds) return undefined;
+
+    const [loMg, hiMg] = [bounds[0] ?? -OPEN_MG, bounds[1] ?? OPEN_MG];
+    const at = (mg : number, scale : number) => clampSensor(latest.value + mg * MG_TO_MMOL * scale);
+
+    return {
+        t0: latest.date,
+        v0: latest.value,
+        t1: latest.date + PREDICT_MS,
+        lo: at(loMg, 1),
+        hi: at(hiMg, 1),
+        openLow: bounds[0] == null,
+        openHigh: bounds[1] == null,
+        // Same rate carried on to 30 minutes for the graph
+        tCone: latest.date + CONE_MS,
+        coneLo: at(loMg, CONE_MS / PREDICT_MS),
+        coneHi: at(hiMg, CONE_MS / PREDICT_MS)
+    }
+}
+
+export type Prediction = NonNullable<ReturnType<typeof predict>>;
+
+export const RANGES = [3, 6, 12, 24] as const;
+export const rangeLabel = (h : number) => `${h}h`;
