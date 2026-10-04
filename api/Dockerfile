@@ -1,13 +1,14 @@
-FROM --platform=$BUILDPLATFORM node:latest
+FROM denoland/deno:2.9.2
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY deno.json deno.lock ./
+COPY src ./src
+RUN deno install --frozen --entrypoint src/main.ts
 
-RUN npm i
-
-COPY . .
-
+ENV DB_PATH=/data/dexter.db
+ENV PORT=80
+VOLUME /data
 EXPOSE 80
 
-ENTRYPOINT ["npm", "start"]
+CMD ["deno", "task", "start"]

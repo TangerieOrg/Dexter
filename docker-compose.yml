@@ -18,12 +18,16 @@ services:
         xyz.tangerie.reverse_proxy.port: "80"
     networks:
       - default
-      - authenticator-overlay
       - nginx-proxy-overlay
+    # redis is only needed for the one-off import into sqlite, remove it once /health shows the data
     depends_on:
       - redis
     environment:
       - DEXCOM_ENV_FILE=/run/secrets/DexcomAuth
+      - DB_PATH=/data/dexter.db
+      - REDIS_URL=redis://dexter_redis:6379
+    volumes:
+      - dexter-data:/data
     secrets:
       - DexcomAuth
 
@@ -41,15 +45,13 @@ services:
       - api
 
 volumes:
+  dexter-data:
   redis-data:
   redis-conf:
 
 networks:
   default:
   nginx-proxy-overlay:
-    external: true
-    driver: overlay
-  authenticator-overlay:
     external: true
     driver: overlay
 
