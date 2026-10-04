@@ -1,6 +1,6 @@
 import { createStore, createUseStore } from "@tangerie/global-store";
-import { getLatestTwo, getRange, Reading, Series } from "../api";
-import { RANGES } from "../glucose";
+import { getLatestTwo, getRange, Reading, Series } from "@modules/api";
+import { RANGES } from "@modules/glucose";
 
 const REFRESH_MS = 60_000;
 // The server backfills holes after signal loss, so occasionally refetch the whole window

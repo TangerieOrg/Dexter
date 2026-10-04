@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import uPlot from "uplot";
-import { Series } from "./api";
-import { formatClock, HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "./glucose";
+import { Series } from "@modules/api";
+import { formatClock, HIGH, LOW, Prediction, rangeColor, RANGE_COLORS } from "@modules/glucose";
 
 // Readings are every 5 minutes, anything longer than this is a gap in the line
 const GAP_MS = 15 * 60 * 1000;
@@ -169,6 +169,8 @@ export default function Chart({ series, hours, prediction } : Props) {
                 {
                     ...AXIS,
                     size: 32,
+                    // Min px between ticks, "10:15 PM" is wider than uPlot's default allows for
+                    space: 80,
                     values: (_u, splits) => splits.map(x => {
                         const d = new Date(x);
                         return formatClock(x, d.getMinutes() !== 0);

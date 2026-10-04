@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { fileURLToPath } from "node:url";
 
 const BASE = "/dexter/";
 
@@ -16,6 +17,13 @@ const PROXY = {
 
 export default defineConfig({
     base: BASE,
+    resolve: {
+        alias: {
+            "@components": fileURLToPath(new URL("./src/components", import.meta.url)),
+            "@modules": fileURLToPath(new URL("./src/modules", import.meta.url)),
+            "@stores": fileURLToPath(new URL("./src/stores", import.meta.url))
+        }
+    },
     plugins: [
         preact(),
         tailwindcss(),

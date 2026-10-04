@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
-import Chart from "./Chart";
-import { Reading } from "./api";
-import { formatClock, predict, Prediction, RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
-import { GlucoseStore, selectError, selectHours, selectLatest, selectLoading, selectPrevious, selectSeries, startRefreshing, useGlucoseStore } from "./stores/GlucoseStore";
+import Chart from "@components/Chart";
+import { Reading } from "@modules/api";
+import { formatClock, predict, Prediction, RANGES, rangeColor, rangeLabel, TREND_INFO } from "@modules/glucose";
+import { GlucoseStore, selectError, selectHours, selectLatest, selectLoading, selectPrevious, selectSeries, startRefreshing, useGlucoseStore } from "@stores/GlucoseStore";
 
 const STALE_MS = 10 * 60 * 1000;
 const DELTA_MAX_MS = 15 * 60 * 1000;
