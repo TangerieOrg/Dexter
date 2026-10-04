@@ -11,7 +11,8 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "preact": "^10.27.0",
+        "@tangerie/global-store": "npm:@jsr/tangerie__global-store@^1.8.0",
+        "preact": "^10.29.8",
         "uplot": "^1.6.32"
     },
     "devDependencies": {

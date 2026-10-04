@@ -1,8 +1,10 @@
-import { DatabaseSync } from "node:sqlite";
+import { openDbHandler } from "@tangerie/utils/sqlite";
 import { Reading } from "./types.ts";
 
 export function openDatabase(path : string) {
-    const db = new DatabaseSync(path);
+    const db = openDbHandler({ path, readonly: false });
+    // Dates are epoch ms, without this @db/sqlite truncates them to 32 bit
+    db.int64 = true;
 
     db.exec(`--sql
         PRAGMA journal_mode = WAL;
@@ -45,31 +47,24 @@ export function openDatabase(path : string) {
     `);
 
     // Returns the number of rows that were actually new
-    const insertMany = (readings : Reading[]) => {
+    const insertMany = db.transaction((readings : Reading[]) => {
         let added = 0;
-        db.exec("BEGIN");
-        try {
-            for(const x of readings) {
-                added += Number(insertStmt.run(x.date, x.mg_dl, x.mmol, x.trend).changes);
-            }
-            db.exec("COMMIT");
-        } catch(err) {
-            db.exec("ROLLBACK");
-            throw err;
+        for(const x of readings) {
+            added += insertStmt.run(x.date, x.mg_dl, x.mmol, x.trend);
         }
         return added;
-    }
+    });
 
     return {
-        insertMany,
-        latest: () => latestStmt.get() as Reading | undefined,
-        lastN: (n : number) => lastNStmt.all(n) as unknown as Reading[],
-        range: (from : number, to : number) => rangeStmt.all(from, to) as unknown as Pick<Reading, "date" | "mmol">[],
-        stats: () => statsStmt.get() as { count: number, min: number | null, max: number | null },
-        getMeta: (key : string) => (getMetaStmt.get(key) as { value: string } | undefined)?.value,
+        insertMany: (readings : Reading[]) => insertMany(readings) as number,
+        latest: () => latestStmt.get<Reading>(),
+        lastN: (n : number) => lastNStmt.all<Reading>(n),
+        range: (from : number, to : number) => rangeStmt.all<Pick<Reading, "date" | "mmol">>(from, to),
+        stats: () => statsStmt.get<{ count: number, min: number | null, max: number | null }>()!,
+        getMeta: (key : string) => getMetaStmt.get<{ value: string }>(key)?.value,
         setMeta: (key : string, value : string) => { setMetaStmt.run(key, value) },
         close: () => {
-            db.exec("PRAGMA analysis_limit=400; PRAGMA optimize;");
+            for(const stmt of [insertStmt, latestStmt, lastNStmt, rangeStmt, statsStmt, getMetaStmt, setMetaStmt]) stmt.finalize();
             db.close();
         }
     }

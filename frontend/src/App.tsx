@@ -1,26 +1,24 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import Chart from "./Chart";
 import { Reading } from "./api";
 import { RANGES, rangeColor, rangeLabel, TREND_INFO } from "./glucose";
-import useGlucose, { useNow } from "./useGlucose";
+import { GlucoseStore, selectError, selectHours, selectLatest, selectLoading, selectPrevious, selectSeries, startRefreshing, useGlucoseStore } from "./stores/GlucoseStore";
 
 const STALE_MS = 10 * 60 * 1000;
 const DELTA_MAX_MS = 15 * 60 * 1000;
-const RANGE_KEY = "dexter.range";
 
-const loadRange = () => {
-    try {
-        const h = parseInt(localStorage.getItem(RANGE_KEY) ?? "");
-        return (RANGES as readonly number[]).includes(h) ? h : 6;
-    } catch {
-        return 6;
-    }
-}
-
-const saveRange = (h : number) => {
-    try {
-        localStorage.setItem(RANGE_KEY, String(h));
-    } catch { }
+function useNow(every = 15_000) {
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), every);
+        const onVisible = () => setNow(Date.now());
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", onVisible);
+        }
+    }, [every]);
+    return now;
 }
 
 const formatAgo = (ms : number) => {
@@ -64,9 +62,15 @@ function Current({ latest, previous, now } : { latest: Reading, previous?: Readi
 }
 
 export default function App() {
-    const [hours, setHours] = useState(loadRange);
-    const { series, latest, previous, error, loading } = useGlucose(hours);
+    const hours = useGlucoseStore(selectHours);
+    const series = useGlucoseStore(selectSeries);
+    const latest = useGlucoseStore(selectLatest);
+    const previous = useGlucoseStore(selectPrevious);
+    const error = useGlucoseStore(selectError);
+    const loading = useGlucoseStore(selectLoading);
     const now = useNow();
+
+    useEffect(() => startRefreshing(), []);
 
     return <main class="safe-area flex min-h-dvh flex-col lg:h-dvh lg:flex-row">
         <section class="flex flex-col items-center justify-center px-4 pb-6 pt-12 lg:max-w-md lg:basis-[28rem] lg:py-10">
@@ -85,10 +89,7 @@ export default function App() {
                     RANGES.map(x => <button
                         key={x}
                         class={`rounded-full px-3 py-1 text-sm transition-colors ${x === hours ? "bg-zinc-100 text-zinc-900" : "text-zinc-400 hover:bg-zinc-800"}`}
-                        onClick={() => {
-                            setHours(x);
-                            saveRange(x);
-                        }}
+                        onClick={() => GlucoseStore.actions.setHours(x)}
                     >
                         {rangeLabel(x)}
                     </button>)
