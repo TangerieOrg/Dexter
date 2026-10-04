@@ -1,7 +1,6 @@
 import { loadEnv } from "./env.ts";
 import { openDatabase } from "./db.ts";
 import { Dexcom } from "./dexcom.ts";
-import { migrateFromRedis } from "./migrate.ts";
 import { startPolling } from "./poller.ts";
 import { createHandler } from "./server.ts";
 
@@ -9,7 +8,6 @@ await loadEnv();
 
 const DB_PATH = Deno.env.get("DB_PATH") ?? "./data/dexter.db";
 const PORT = parseInt(Deno.env.get("PORT") ?? "80");
-const REDIS_URL = Deno.env.get("REDIS_URL");
 const DEXCOM_USERNAME = Deno.env.get("DEXCOM_USERNAME");
 const DEXCOM_PASSWORD = Deno.env.get("DEXCOM_PASSWORD");
 
@@ -18,8 +16,6 @@ if(dir) await Deno.mkdir(dir, { recursive: true });
 
 const db = openDatabase(DB_PATH);
 console.log("[DB] Opened", DB_PATH, db.stats());
-
-if(REDIS_URL) await migrateFromRedis(db, REDIS_URL);
 
 let stopPolling = () => {};
 if(DEXCOM_USERNAME && DEXCOM_PASSWORD) {

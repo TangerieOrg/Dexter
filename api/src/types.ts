@@ -19,7 +19,6 @@ export const MMOL_L_CONVERSION_FACTOR = 0.0555;
 
 // Same rounding dexcom.js used so stored values stay comparable
 export const mgToMmol = (mg : number) => Math.round(mg * MMOL_L_CONVERSION_FACTOR * 100) / 100;
-export const mmolToMg = (mmol : number) => Math.round(mmol / MMOL_L_CONVERSION_FACTOR);
 
 export interface Reading {
     date: number;
@@ -28,7 +27,7 @@ export interface Reading {
     trend: GlucoseTrend;
 }
 
-// Shape served since the redis days, PicoDexter depends on it
+// PicoDexter depends on this shape
 export interface ApiReading {
     value: number,
     trend: GlucoseTrend,

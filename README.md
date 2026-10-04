@@ -6,6 +6,4 @@ Dexcom web UI / api / database
 
 API is public on purpose, PicoDexter reads `/glucose/current` and `/glucose/ten`.
 
-## Redis cutover
-On first start the api imports `glucose:readings` from `REDIS_URL` into sqlite and logs `[Migrate] Imported redis readings`.
-Once `/dexter/api/health` shows the count, remove the `redis` service, `REDIS_URL` and `depends_on` from `docker-compose.yml`.
+Old redis data (pre sqlite) backed up to `~/dexter-redis-backup-20261004` on the swarm host.

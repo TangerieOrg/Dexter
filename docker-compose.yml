@@ -1,14 +1,5 @@
 version: '3'
 services:
-  redis:
-    image: redislabs/redismod:latest
-    volumes:
-      - redis-data:/data
-      - redis-conf:/usr/local/etc/redis/redis.conf
-    # ports:
-    #   - 6379:6379
-    deploy:
-      replicas: 1
   api:
     image: ${IMAGE_NAME}/api:latest
     deploy:
@@ -19,13 +10,9 @@ services:
     networks:
       - default
       - nginx-proxy-overlay
-    # redis is only needed for the one-off import into sqlite, remove it once /health shows the data
-    depends_on:
-      - redis
     environment:
       - DEXCOM_ENV_FILE=/run/secrets/DexcomAuth
       - DB_PATH=/data/dexter.db
-      - REDIS_URL=redis://dexter_redis:6379
     volumes:
       - dexter-data:/data
     secrets:
@@ -46,8 +33,6 @@ services:
 
 volumes:
   dexter-data:
-  redis-data:
-  redis-conf:
 
 networks:
   default:

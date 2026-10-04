@@ -1,7 +1,6 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { openDatabase } from "./db.ts";
 import { parseReading } from "./dexcom.ts";
-import { convertRedisReadings, importReadings } from "./migrate.ts";
 import { getPullWindow } from "./poller.ts";
 import { createHandler, parseLength } from "./server.ts";
 import { mgToMmol, Reading } from "./types.ts";
@@ -23,34 +22,6 @@ Deno.test("insertMany dedupes and keeps order", () => {
     assertEquals(db.lastN(10).map(x => x.date), [0, 1, 2, 3].map(x => T0 + x * FIVE_MIN));
     assertEquals(db.latest()?.date, T0 + 3 * FIVE_MIN);
     db.close();
-});
-
-Deno.test("redis import is lossless", async () => {
-    const redis = [
-        { value: 12.54, trend: "FortyFiveUp", trendArrow: "↗", date: T0 },
-        { value: 2.22, trend: "DoubleDown", trendArrow: "↓↓", date: T0 + FIVE_MIN },
-        { value: 2.22, trend: "DoubleDown", trendArrow: "↓↓", date: T0 + FIVE_MIN },
-        { value: 22.2, trend: "None", trendArrow: "", date: T0 + 100 * FIVE_MIN }
-    ];
-    const db = openDatabase(":memory:");
-    const result = importReadings(db, convertRedisReadings(redis));
-    assertEquals(result.unique, 3);
-    assertEquals(result.added, 3);
-
-    const handler = createHandler(db);
-    const { body } = await get(handler, "/glucose/ten");
-    assertEquals(body, [redis[0], redis[1], redis[3]]);
-    assertEquals(db.lastN(3).map(x => x.mg_dl), [226, 40, 400]);
-
-    // Second import adds nothing
-    assertEquals(importReadings(db, convertRedisReadings(redis)).added, 0);
-    db.close();
-});
-
-Deno.test("redis import rejects bad data", () => {
-    assertThrows(() => convertRedisReadings({}));
-    assertThrows(() => convertRedisReadings([{ value: "1", trend: "Flat", date: 1 }]));
-    assertThrows(() => convertRedisReadings([{ value: 1, trend: "Sideways", date: 1 }]));
 });
 
 Deno.test("mmol round trips through mg/dL", () => {
