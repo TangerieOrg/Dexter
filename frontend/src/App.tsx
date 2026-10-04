@@ -50,11 +50,12 @@ function Current({ latest, previous, now } : { latest: Reading, previous?: Readi
     const delta = hasDelta ? latest.value - previous.value : 0;
 
     return <div class={`flex flex-col items-center text-center ${stale ? "opacity-60" : ""}`}>
-        <div class="flex items-start gap-3">
+        <div class="flex items-center gap-3">
             <h1 class="text-8xl font-thin tabular-nums leading-none sm:text-9xl" style={{ color: rangeColor(latest.value) }}>
                 {latest.value.toFixed(1)}
             </h1>
-            <span class="mt-2 text-5xl font-light text-zinc-300 sm:text-6xl" aria-label={latest.trend}>{latest.trendArrow}</span>
+            {/* →, ↗ and ↘ sit lower in the font than ↑/↓, lift them so all arrows centre on the number */}
+            <span class={`text-5xl font-light leading-none text-zinc-300 sm:text-6xl ${["Flat", "FortyFiveUp", "FortyFiveDown"].includes(latest.trend) ? "-translate-y-[0.06em]" : ""}`} aria-label={latest.trend}>{latest.trendArrow}</span>
         </div>
         <span class="mt-1 text-sm font-light uppercase tracking-widest text-zinc-500">mmol/L</span>
         <span class="mt-3 text-2xl font-light tabular-nums text-zinc-300">
