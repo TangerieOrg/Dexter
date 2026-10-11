@@ -1,15 +1,11 @@
-version: '3'
+name: dexter
+
 services:
   api:
-    image: ${IMAGE_NAME}/api:latest
-    deploy:
-      replicas: 1
-      labels:
-        xyz.tangerie.reverse_proxy.path: "/dexter/api"
-        xyz.tangerie.reverse_proxy.port: "80"
-    networks:
-      - default
-      - nginx-proxy-overlay
+    build: ./api
+    image: dexter-api:latest
+    pull_policy: never
+    restart: unless-stopped
     environment:
       - DEXCOM_ENV_FILE=/run/secrets/DexcomAuth
       - DB_PATH=/data/dexter.db
@@ -17,29 +13,44 @@ services:
       - dexter-data:/data
     secrets:
       - DexcomAuth
+    networks:
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+      - "traefik.http.routers.dexter-api.rule=Path(`/dexter/api`) || PathPrefix(`/dexter/api/`)"
+      - "traefik.http.routers.dexter-api.entrypoints=web,websecure"
+      - "traefik.http.routers.dexter-api.middlewares=stripprefix-dexter-api"
+      - "traefik.http.middlewares.stripprefix-dexter-api.stripprefix.prefixes=/dexter/api"
+      - "traefik.http.services.dexter-api.loadbalancer.server.port=80"
 
   frontend:
-    image: ${IMAGE_NAME}/frontend:latest
-    deploy:
-      replicas: 1
-      labels:
-        xyz.tangerie.reverse_proxy.path: "/dexter"
-        xyz.tangerie.reverse_proxy.port: "80"
-    networks:
-      - default
-      - nginx-proxy-overlay
+    build: ./frontend
+    image: dexter-frontend:latest
+    pull_policy: never
+    restart: unless-stopped
     depends_on:
       - api
+    networks:
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+      - "traefik.http.routers.dexter.rule=Path(`/dexter`) || PathPrefix(`/dexter/`)"
+      - "traefik.http.routers.dexter.entrypoints=web,websecure"
+      - "traefik.http.routers.dexter.middlewares=add-slash@file,stripprefix-dexter"
+      - "traefik.http.middlewares.stripprefix-dexter.stripprefix.prefixes=/dexter"
+      - "traefik.http.services.dexter.loadbalancer.server.port=80"
 
 volumes:
   dexter-data:
+    external: true
+    name: dexter_dexter-data
 
 networks:
-  default:
-  nginx-proxy-overlay:
+  traefik-proxy:
     external: true
-    driver: overlay
 
 secrets:
   DexcomAuth:
-    external: true
+    file: /home/tangerie/secrets/DexcomAuth

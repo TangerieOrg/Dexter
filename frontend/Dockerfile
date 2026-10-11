@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM docker.tangerie.xyz/nginx-spa
+FROM ghcr.io/tangerieorg/nginx-spa
 
 WORKDIR /app
 
